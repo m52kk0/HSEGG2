@@ -6,12 +6,12 @@
   "license": "MIT",
   "packageManager": "pnpm@9.12.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "concurrently -k -n web,api -c cyan,magenta \"pnpm -F @cursus/web dev\" \"pnpm -F @cursus/api dev\"",
     "build": "pnpm -F @cursus/web build && pnpm -F @cursus/api build",
-    "start": "node apps/api/dist/index.js",
+    "start": "node start.mjs",
     "lint": "eslint . --max-warnings=0 && stylelint \"apps/web/src/**/*.css\"",
     "typecheck": "tsc -p packages/core && tsc -p packages/data && tsc -p apps/api && tsc -p apps/web && tsc -p tsconfig.tools.json",
     "test": "vitest run",
@@ -21,7 +21,9 @@
     "e2e:install": "playwright install --with-deps chromium",
     "gen:programs": "tsx scripts/generate-demo-programs.ts",
     "format": "prettier --write .",
-    "docker:smoke": "node scripts/docker-smoke.mjs"
+    "docker:smoke": "node scripts/docker-smoke.mjs",
+    "start:local": "node start.mjs --local",
+    "start:dev": "node start.mjs --dev"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.1",

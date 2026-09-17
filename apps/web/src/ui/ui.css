@@ -354,8 +354,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  gap: calc(var(--space) * 0.5);
+  justify-content: flex-start;
+  gap: calc(var(--space) * 0.75);
   min-height: 56px;
   padding: calc(var(--space) * 1.5) calc(var(--space) * 2);
   border: 1px solid var(--border);
@@ -385,12 +385,21 @@
 }
 
 .tile-title {
-  font-weight: 500;
+  font-size: var(--h3-size);
+  font-weight: 600;
+  line-height: 1.3;
+  /* «программирование» шире колонки — без переноса слово уезжало за карточку. */
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .tile-hint {
   font-size: var(--small-size);
+  font-weight: 400;
+  line-height: 1.4;
   color: var(--text-secondary);
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .tile-order {
@@ -410,13 +419,14 @@
 
 .tile-locked {
   font-size: var(--small-size);
+  line-height: 1.4;
   color: var(--text-secondary);
 }
 
 .tile-grid {
   display: grid;
   gap: var(--space);
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
 }
 
 /* ---------- Input / NumberInput / Combobox ---------- */

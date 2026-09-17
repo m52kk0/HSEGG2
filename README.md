@@ -7,7 +7,7 @@
 до 5 вузов и до 5 направлений в каждом, — расставляет приоритеты, показывает запас баллов к прогнозу
 проходного и честно говорит, где план рискует развалиться.
 
-[![CI](https://github.com/cursus/cursus/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+[![CI](https://github.com/m52kk0/HSEGG2/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 ![Покрытие ядра](https://img.shields.io/badge/%D0%BF%D0%BE%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D0%B5%20core-99%25-brightgreen)
 ![Тесты](https://img.shields.io/badge/%D1%82%D0%B5%D1%81%D1%82%D1%8B-299%20unit%20%2B%2048%20e2e-brightgreen)
 ![Лицензия](https://img.shields.io/badge/%D0%BB%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F-MIT-blue)
@@ -16,22 +16,42 @@
 
 ## Быстрый старт
 
-Один контейнер, внутри и фронт, и API:
+Один файл запуска. Ставить ничего, кроме **Node 22+**, не нужно:
+
+```bash
+node start.mjs
+```
+
+На Windows можно просто дважды кликнуть `start.cmd`, на Linux и macOS — `./start.sh`.
+
+Скрипт сам проверит окружение, выберет способ запуска (Docker, если он есть на машине, иначе
+локальная сборка), при необходимости поднимет pnpm через corepack, поставит зависимости, соберёт
+проект, дождётся ответа `/api/health` и напечатает адрес. Открывай <http://localhost:8080>.
+
+Если порт занят, скрипт скажет об этом сразу — выбери другой:
+
+```bash
+PORT=8081 node start.mjs
+```
+
+Режимы, если нужно явно:
+
+| Команда | Что делает |
+| --- | --- |
+| `node start.mjs` | Автовыбор: Docker, если доступен, иначе локальная сборка |
+| `node start.mjs --docker` | Только контейнер |
+| `node start.mjs --local` | Без Docker: прод-сборка одним процессом |
+| `node start.mjs --dev` | Разработка: Vite на <http://localhost:5173> с автоперезагрузкой |
+| `node start.mjs --help` | Подсказка |
+
+Ручной вариант, если хочется без обёртки:
 
 ```bash
 docker build -t cursus . && docker run -p 8080:8080 -v cursus-data:/data cursus
 ```
 
-Открой <http://localhost:8080>.
-
-Вариант для разработки:
-
-```bash
-pnpm install && pnpm dev
-```
-
-Фронт поднимется на <http://localhost:5173>, API — на <http://localhost:8080>. Подробности —
-в [docs/DEPLOY.md](docs/DEPLOY.md).
+Подробности о переменных окружения и развёртывании — в [docs/DEPLOY.md](docs/DEPLOY.md).
+**План защиты проекта — в [docs/DEMO.md](docs/DEMO.md).**
 
 ---
 
@@ -128,6 +148,7 @@ cursus/
 
 | Файл | О чём |
 | --- | --- |
+| [docs/DEMO.md](docs/DEMO.md) | **План защиты: сценарий, цифры, ответы на неудобные вопросы** |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Схема, поток данных, отказоустойчивость |
 | [docs/ALGORITHM.md](docs/ALGORITHM.md) | Формулы, пороги зон, примеры расчёта и честные ограничения |
 | [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) | Источники, даты, лицензии, как добавить реальные проходные |

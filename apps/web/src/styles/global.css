@@ -79,9 +79,18 @@ a:hover {
   text-decoration: underline;
 }
 
-button {
+/*
+ * Формы не наследуют шрифт и межстрочный интервал: без этого внутри кнопок
+ * line-height становится `normal`, и многострочный текст в плитках выглядит
+ * сжатым и неровным.
+ */
+button,
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: inherit;
+  line-height: inherit;
 }
 
 /* Видимый фокус — обязателен: весь интерфейс управляется с клавиатуры. */
