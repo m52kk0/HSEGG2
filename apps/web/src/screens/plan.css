@@ -1,0 +1,223 @@
+.plan {
+  max-width: 760px;
+}
+
+.verdict-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.verdict-good {
+  background: var(--zone-safe);
+}
+
+.verdict-warning {
+  background: var(--zone-target);
+}
+
+.verdict-danger,
+.verdict-empty {
+  background: var(--zone-reach);
+}
+
+/* ---------- Нумерованный список направлений внутри вуза ---------- */
+.program-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.program-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'priority'
+    'main'
+    'actions';
+  gap: var(--space);
+  padding: calc(var(--space) * 1.5) 0;
+  border-top: 1px solid var(--border);
+  animation: row-in var(--motion) var(--ease);
+}
+
+.program-row:first-child {
+  border-top: 0;
+}
+
+@media (width >= 560px) {
+  .program-row {
+    grid-template-columns: 148px 1fr auto;
+    grid-template-areas: 'priority main actions';
+    align-items: center;
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .program-row {
+    animation: none;
+  }
+}
+
+.program-priority {
+  grid-area: priority;
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+}
+
+.program-priority-num {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  font-weight: 600;
+  font-size: var(--small-size);
+  flex: none;
+}
+
+.program-priority-label {
+  font-size: var(--small-size);
+  color: var(--text-secondary);
+}
+
+.program-main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.5);
+  min-width: 0;
+}
+
+.program-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.program-name:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.program-actions {
+  grid-area: actions;
+  display: flex;
+  gap: calc(var(--space) * 0.5);
+  justify-content: flex-end;
+}
+
+/* ---------- Списки добавления ---------- */
+.add-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  padding: var(--space) 0;
+  border-top: 1px solid var(--border);
+}
+
+.add-row:first-child {
+  border-top: 0;
+}
+
+.add-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Симуляция ---------- */
+.simulation {
+  border-top: 1px solid var(--border);
+  padding-top: calc(var(--space) * 1.5);
+}
+
+.simulation-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space);
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.simulation-body {
+  padding-top: var(--space);
+}
+
+.chevron {
+  transition: transform var(--motion) var(--ease);
+}
+
+.chevron-open {
+  transform: rotate(180deg);
+}
+
+.chevron-right {
+  transform: rotate(-90deg);
+  color: var(--text-secondary);
+}
+
+/* ---------- План Б ---------- */
+.planb-teaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  padding: calc(var(--space) * 2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  color: var(--text-primary);
+  min-height: 60px;
+}
+
+.planb-teaser:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+/* ---------- Что сделать сейчас ---------- */
+.step-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(var(--space) * 0.5);
+  padding: var(--space) 0;
+  border-top: 1px solid var(--border);
+}
+
+@media (width >= 560px) {
+  .step-row {
+    grid-template-columns: 160px 1fr;
+    gap: calc(var(--space) * 2);
+  }
+}
+
+.step-row:first-child {
+  border-top: 0;
+}
+
+.step-date {
+  font-size: var(--small-size);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.reset-block {
+  padding-top: calc(var(--space) * 2);
+  border-top: 1px solid var(--border);
+}

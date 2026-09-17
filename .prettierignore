@@ -1,0 +1,5 @@
+data/
+dist/
+coverage/
+pnpm-lock.yaml
+playwright-report/

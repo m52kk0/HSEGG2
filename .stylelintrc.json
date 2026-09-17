@@ -1,0 +1,18 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "color-no-hex": [true, { "message": "Хардкод-цвета запрещены: используй переменные из tokens.css" }],
+    "custom-property-pattern": null,
+    "selector-class-pattern": null,
+    "declaration-empty-line-before": null,
+    "no-descending-specificity": null,
+    "alpha-value-notation": null,
+    "value-keyword-case": null
+  },
+  "overrides": [
+    {
+      "files": ["apps/web/src/styles/tokens.css"],
+      "rules": { "color-no-hex": null }
+    }
+  ]
+}

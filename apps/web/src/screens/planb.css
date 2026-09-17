@@ -1,0 +1,87 @@
+.planb-page {
+  max-width: 760px;
+}
+
+/* Вертикальное дерево: ствол слева, ветки — карточки. */
+.branches {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2);
+}
+
+.branch {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: calc(var(--space) * 1.5);
+}
+
+.branch-line {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: calc(var(--space) * 3);
+}
+
+.branch-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--bg);
+  flex: none;
+}
+
+.branch-stem {
+  flex: 1;
+  width: 1px;
+  background: var(--border);
+  margin-top: calc(var(--space) * 0.5);
+  min-height: 40px;
+}
+
+.branch-card {
+  width: 100%;
+}
+
+.branch-card-best {
+  border-color: var(--accent);
+}
+
+.branch-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: calc(var(--space) * 0.5) var(--space);
+  border-radius: var(--radius-s);
+  background: var(--accent-light);
+  color: var(--accent-hover);
+  font-size: var(--small-size);
+  font-weight: 500;
+}
+
+.pros-cons {
+  display: grid;
+  gap: calc(var(--space) * 2);
+  grid-template-columns: 1fr;
+}
+
+@media (width >= 560px) {
+  .pros-cons {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.todo-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space);
+}
+
+.todo-box {
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  flex: none;
+}

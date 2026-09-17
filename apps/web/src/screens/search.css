@@ -1,0 +1,30 @@
+.search-page {
+  max-width: 760px;
+}
+
+.result-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space);
+  flex-wrap: wrap;
+}
+
+.result-main {
+  flex: 1;
+  min-width: 220px;
+}
+
+.result-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.result-name:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.result-blocked {
+  color: var(--zone-reach);
+}

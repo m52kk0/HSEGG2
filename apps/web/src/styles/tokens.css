@@ -1,0 +1,52 @@
+/*
+ * Единственное место, где в проекте объявляются цвета и размеры.
+ * В компонентах хардкод-цвета запрещены — это проверяет stylelint (color-no-hex).
+ */
+:root {
+  --bg: #ffffff;
+  --bg-secondary: #f7f8fa;
+  --text-primary: #000000;
+  --text-secondary: #6b6b6b; /* #999 не проходит контраст AA для мелкого текста */
+  --text-tertiary: #a3a3a3; /* только плейсхолдеры и неактивное */
+  --border: #e5e5e5;
+  --accent: #0077ff;
+  --accent-hover: #005fcc;
+  --accent-light: #f0f7ff;
+  --zone-safe: #00b341;
+  --zone-target: #ffa800;
+  --zone-reach: #f5222d;
+
+  /* Производные от сигнальных цветов: фоны плашек. */
+  --zone-safe-light: #e8f9ee;
+  --zone-target-light: #fff6e5;
+  --zone-reach-light: #fff1f0;
+
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --space: 8px;
+  --max-width: 1080px;
+  --font:
+    'Inter', system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif;
+
+  /* Типографика */
+  --h1-size: 28px;
+  --h2-size: 20px;
+  --h3-size: 16px;
+  --body-size: 15px;
+  --small-size: 13px;
+  --data-size: 24px;
+
+  /* Одна длительность на весь интерфейс: изменения плана не должны отвлекать. */
+  --motion: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* Высота нижнего таб-бара на мобильном — на неё отступает контент. */
+  --tabbar-height: 60px;
+  --focus-ring: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0ms;
+  }
+}

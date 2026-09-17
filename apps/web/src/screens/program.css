@@ -1,0 +1,74 @@
+.program-page {
+  max-width: 760px;
+}
+
+.facts {
+  display: grid;
+  gap: var(--space);
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.5);
+  padding: calc(var(--space) * 2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+}
+
+.exam-row {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.25);
+  padding: var(--space) 0;
+  border-top: 1px solid var(--border);
+}
+
+.exam-row:first-child {
+  border-top: 0;
+}
+
+.exam-row-failed .exam-note {
+  color: var(--zone-reach);
+  font-weight: 500;
+}
+
+.job-chip {
+  padding: calc(var(--space) * 0.75) calc(var(--space) * 1.5);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: var(--small-size);
+}
+
+.source {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.vacancy-row,
+.similar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  padding: calc(var(--space) * 1.25) 0;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.vacancy-row:first-child,
+.similar-row:first-child {
+  border-top: 0;
+}
+
+.similar-main {
+  flex: 1;
+  min-width: 200px;
+}
+
+.similar-actions {
+  gap: calc(var(--space) * 2);
+  flex: none;
+}

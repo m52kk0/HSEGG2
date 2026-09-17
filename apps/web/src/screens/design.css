@@ -1,0 +1,28 @@
+.design-page {
+  max-width: 860px;
+}
+
+.design-section {
+  padding-bottom: calc(var(--space) * 3);
+  border-bottom: 1px solid var(--border);
+}
+
+.swatches {
+  display: grid;
+  gap: var(--space);
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+}
+
+.swatch-box {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  flex: none;
+}
