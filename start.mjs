@@ -292,7 +292,15 @@ async function startLocal() {
   });
 
   const health = await waitForHealth();
-  if (exited) die('сервер завершился при старте', 'Сообщение об ошибке — в выводе выше.');
+
+  // На /api/health мог ответить чужой процесс на том же порту, а наш —
+  // упасть. Успех объявляем, только если наш сервер жив: даём событию
+  // 'exit' дойти и перепроверяем.
+  await new Promise((r) => setTimeout(r, 400));
+  if (exited || server.exitCode !== null) {
+    die('сервер завершился при старте', 'Причина — в выводе выше.');
+  }
+
   if (!health) {
     server.kill();
     die(`сервер не ответил на ${HEALTH}`, `Попробуй другой порт: PORT=8081 node start.mjs`);
