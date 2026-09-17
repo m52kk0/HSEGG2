@@ -13,6 +13,9 @@ export default defineWorkspace([
     },
   },
   {
+    // Корень — сам пакет: react и его jsx-runtime лежат в apps/web/node_modules,
+    // из корня монорепозитория они не разрешаются.
+    root: fileURLToPath(new URL('./apps/web', import.meta.url)),
     plugins: [react()],
     resolve: {
       alias: { '@': fileURLToPath(new URL('./apps/web/src', import.meta.url)) },
@@ -21,8 +24,8 @@ export default defineWorkspace([
       name: 'web',
       environment: 'jsdom',
       globals: true,
-      setupFiles: ['./apps/web/src/test/setup.ts'],
-      include: ['apps/web/**/*.test.{ts,tsx}'],
+      setupFiles: ['./src/test/setup.ts'],
+      include: ['src/**/*.test.{ts,tsx}'],
     },
   },
 ]);

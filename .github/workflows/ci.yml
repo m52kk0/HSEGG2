@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # node:sqlite доступен без флага начиная с Node 23; в проде — node:24-alpine.
+  NODE_VERSION: '24'
+
+jobs:
+  checks:
+    name: Линтеры, типы, тесты
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Линтеры
+        run: pnpm lint
+
+      - name: Проверка типов
+        run: pnpm typecheck
+
+      - name: Демо-данные детерминированы
+        # Генератор обязан давать ровно тот файл, который лежит в репозитории.
+        run: |
+          pnpm gen:programs
+          git diff --exit-code data/snapshot/programs.demo.json data/snapshot/stats.json
+
+      - name: Тесты с покрытием
+        run: pnpm test:cov
+
+      - name: Отчёт о покрытии
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  e2e:
+    name: E2E и доступность
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Браузер для Playwright
+        run: pnpm e2e:install
+
+      - name: Сборка фронта
+        run: pnpm -F @cursus/web build
+
+      - name: E2E на мобильном и десктопе, включая axe
+        run: pnpm e2e
+
+      - name: Отчёт Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  docker:
+    name: Smoke-проверка контейнера
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: docker build, run и проверка эндпоинтов
+        run: node scripts/docker-smoke.mjs

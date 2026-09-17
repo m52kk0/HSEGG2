@@ -254,20 +254,28 @@ function UniversityCard({
             </p>
           )}
           <ZoneStrip programs={entry.programs} />
-          <button
-            type="button"
-            className="disclosure no-print"
-            aria-expanded={open}
-            aria-controls={listId}
-            onClick={() => setOpen((v) => !v)}
-          >
-            <ChevronDown
-              size={16}
-              aria-hidden="true"
-              className={open ? 'chevron chevron-open' : 'chevron'}
-            />
-            {open ? 'Свернуть направления' : 'Показать направления и приоритеты'}
-          </button>
+
+          {/* Управление вузом — в шапке: свёрнутую карточку тоже надо уметь убрать. */}
+          <div className="card-header-actions no-print">
+            <button
+              type="button"
+              className="disclosure"
+              aria-expanded={open}
+              aria-controls={listId}
+              onClick={() => setOpen((v) => !v)}
+            >
+              <ChevronDown
+                size={16}
+                aria-hidden="true"
+                className={open ? 'chevron chevron-open' : 'chevron'}
+              />
+              {open ? 'Свернуть направления' : 'Показать направления и приоритеты'}
+            </button>
+            <span className="spacer" />
+            <Button variant="text" size="s" onClick={() => removeUniversity(universityId)}>
+              Убрать вуз
+            </Button>
+          </div>
         </header>
 
         <div id={listId} className={open ? 'card-body' : 'card-body card-body-collapsed'}>
@@ -343,10 +351,6 @@ function UniversityCard({
               больше в один вуз подать нельзя.
             </p>
           )}
-          <span className="spacer" />
-          <Button variant="text" size="s" onClick={() => removeUniversity(universityId)}>
-            Убрать вуз
-          </Button>
         </div>
 
         {adding ? (

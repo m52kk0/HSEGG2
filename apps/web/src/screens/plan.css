@@ -47,6 +47,13 @@
 }
 
 /* ---------- Сворачивание карточки вуза ---------- */
+.card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  flex-wrap: wrap;
+}
+
 .disclosure {
   display: inline-flex;
   align-items: center;

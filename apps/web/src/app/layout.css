@@ -13,10 +13,12 @@
   min-height: 56px;
 }
 
+/* Логотип — это ссылка на главный экран, значит тоже тач-цель 44px. */
 .logo {
   display: inline-flex;
   align-items: center;
   gap: var(--space);
+  min-height: 44px;
   color: var(--text-primary);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -44,9 +46,11 @@
 }
 
 .header-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--text-secondary);
   font-weight: 500;
-  padding: calc(var(--space) * 0.5) 0;
   border-bottom: 2px solid transparent;
 }
 

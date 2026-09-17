@@ -161,13 +161,18 @@ export function Tooltip({ text, label = 'Что это значит' }: { text: 
         aria-label={label}
         aria-expanded={open}
         aria-describedby={open ? id : undefined}
-        onClick={() => setOpen((v) => !v)}
+        // Клик только открывает: на телефоне перед click приходит mouseenter,
+        // и переключение закрывало подсказку сразу после касания.
+        // Закрывают: Escape, клик вне, уход курсора и потеря фокуса.
+        onClick={() => setOpen(true)}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
       >
-        ?
+        <span className="tooltip-dot" aria-hidden="true">
+          ?
+        </span>
       </button>
       {open ? (
         <span className="tooltip-bubble" id={id} role="tooltip">
