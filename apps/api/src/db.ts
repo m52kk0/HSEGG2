@@ -28,8 +28,14 @@ export interface Store {
   countSessions: (since: number, includeSynthetic: boolean) => number;
   countSynthetic: (since: number) => number;
   countByEvent: (since: number, includeSynthetic: boolean) => Map<string, number>;
-  /** Уникальные сессии, в которых было событие — для воронки. */
+  /** Уникальные сессии, в которых было событие. */
   sessionsByEvent: (since: number, includeSynthetic: boolean) => Map<string, number>;
+  /**
+   * Сессии, в которых произошли ВСЕ перечисленные события — честная воронка.
+   * Иначе конверсия может превысить 100%: например, при входе по ссылке
+   * «Поделиться планом» человек видит план, не проходя онбординг.
+   */
+  sessionsWithAll: (since: number, includeSynthetic: boolean, names: string[]) => number;
   topProps: (
     since: number,
     includeSynthetic: boolean,
@@ -136,6 +142,24 @@ export function openStore(path: string): Store {
         )
         .all(since) as { name: string; n: number }[];
       return new Map(rows.map((r) => [r.name, r.n]));
+    },
+
+    sessionsWithAll(since, includeSynthetic, names) {
+      if (names.length === 0) return 0;
+      const placeholders = names.map(() => '?').join(', ');
+      const row = db
+        .prepare(
+          `SELECT COUNT(*) AS n FROM (
+             SELECT session_id
+               FROM events
+              WHERE created_at >= ?${syntheticFilter(includeSynthetic)}
+                AND name IN (${placeholders})
+              GROUP BY session_id
+             HAVING COUNT(DISTINCT name) = ?
+           )`,
+        )
+        .get(since, ...names, names.length) as { n: number } | undefined;
+      return row?.n ?? 0;
     },
 
     topProps(since, includeSynthetic, event, prop, limit) {

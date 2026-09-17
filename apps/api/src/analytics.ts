@@ -63,9 +63,19 @@ export function buildStats(
   const since = periodStart(period, now);
   const sessionsByEvent = store.sessionsByEvent(since, includeSynthetic);
 
+  // Каждый шаг — сессии, дошедшие до него ЧЕРЕЗ все предыдущие.
+  // Так конверсия не может оказаться больше 100%.
+  const reached = FUNNEL.map((_, index) =>
+    store.sessionsWithAll(
+      since,
+      includeSynthetic,
+      FUNNEL.slice(0, index + 1).map((s) => s.event),
+    ),
+  );
+
   const funnel: FunnelStep[] = FUNNEL.map((step, index) => {
-    const count = sessionsByEvent.get(step.event) ?? 0;
-    const previous = index === 0 ? null : (sessionsByEvent.get(FUNNEL[index - 1]!.event) ?? 0);
+    const count = reached[index] ?? 0;
+    const previous = index === 0 ? null : (reached[index - 1] ?? 0);
     return {
       name: step.label,
       count,

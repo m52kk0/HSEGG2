@@ -326,6 +326,7 @@ const emptyStore: Store = {
   countSynthetic: () => 0,
   countByEvent: () => new Map(),
   sessionsByEvent: () => new Map(),
+  sessionsWithAll: () => 0,
   topProps: () => [],
   clearSynthetic: () => undefined,
   readCache: () => null,

@@ -1,0 +1,21 @@
+# Удобная обёртка. Основной сценарий из README — один docker run.
+services:
+  cursus:
+    build: .
+    image: cursus:latest
+    ports:
+      - '8080:8080'
+    environment:
+      PORT: 8080
+      DATABASE_PATH: /data/cursus.db
+      # Пусто => демо-режим: /admin открыт без пароля.
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      VACANCIES_TIMEOUT_MS: ${VACANCIES_TIMEOUT_MS:-4000}
+      VACANCIES_CACHE_TTL_H: ${VACANCIES_CACHE_TTL_H:-6}
+      REFRESH_WIKIDATA: 'false'
+    volumes:
+      - cursus-data:/data
+    restart: unless-stopped
+
+volumes:
+  cursus-data:

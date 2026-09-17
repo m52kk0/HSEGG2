@@ -2,7 +2,6 @@ import type { Direction, Program, Region, University } from '@cursus/core';
 import { ugsn } from '@cursus/core';
 import type { DirectionContent, SalaryEntry, SimilarDirection } from './snapshot';
 import {
-  SNAPSHOT_DATE,
   directions,
   directionsContent,
   programs,
@@ -158,10 +157,5 @@ export function similarCodes(code: string, limit = 4): SimilarDirection[] {
     .map((d) => ({ code: d.code, diff: '' }));
 }
 
-export const snapshotStats = {
-  date: SNAPSHOT_DATE,
-  directions: directions.length,
-  universities: universities.length,
-  regions: regions.length,
-  programs: programs.length,
-};
+export { SNAPSHOT_STATS as snapshotStats } from './stats';
+export type { SnapshotStats } from './stats';

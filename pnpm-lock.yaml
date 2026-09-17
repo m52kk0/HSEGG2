@@ -11,6 +11,12 @@ importers:
       '@axe-core/playwright':
         specifier: ^4.10.1
         version: 4.13.0(playwright-core@1.63.0)
+      '@cursus/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@cursus/data':
+        specifier: workspace:*
+        version: link:packages/data
       '@eslint/js':
         specifier: ^9.17.0
         version: 9.39.5

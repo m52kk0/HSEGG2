@@ -21,6 +21,18 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     chunkSizeWarningLimit: 3000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Снимок данных — отдельный чанк: он не меняется между релизами
+          // кода, поэтому переиспользуется из кэша браузера.
+          if (id.includes('data/snapshot') || id.includes('data/content')) return 'snapshot';
+          if (id.includes('packages/data')) return 'snapshot';
+          if (id.includes('node_modules')) return 'vendor';
+          return undefined;
+        },
+      },
+    },
   },
   test: {
     environment: 'jsdom',

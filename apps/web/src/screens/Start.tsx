@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { CAMPAIGN_RULES_NOTE, LIMITS, ZONE_HINTS, ZONE_LABELS, decodeProfile } from '@cursus/core';
-import { SNAPSHOT_DATE, snapshotStats } from '@cursus/data';
+import { SNAPSHOT_STATS } from '@cursus/data/stats';
 import { Button, Card, DemoTag, ZoneBadge } from '@/ui';
 import { useStore } from '@/store/useStore';
 import { DEMO_PROFILE } from '@/lib/demo';
@@ -148,22 +148,22 @@ export function Start() {
         <h2>Что под капотом</h2>
         <ul className="facts-row">
           <li>
-            <span className="data">{snapshotStats.universities}</span>
+            <span className="data">{SNAPSHOT_STATS.universities}</span>
             <span className="small text-secondary">вузов в снимке</span>
           </li>
           <li>
-            <span className="data">{snapshotStats.directions}</span>
+            <span className="data">{SNAPSHOT_STATS.directions}</span>
             <span className="small text-secondary">направлений бакалавриата</span>
           </li>
           <li>
-            <span className="data">{snapshotStats.regions}</span>
+            <span className="data">{SNAPSHOT_STATS.regions}</span>
             <span className="small text-secondary">регионов</span>
           </li>
         </ul>
         <p className="small text-secondary">
           Зарплаты выпускников и трудоустройство — Росстат и Роструд. Вакансии — живой API
           «Работа России». Список вузов — Wikidata, он неполный, и это честно указано в
-          документации. Данные на {formatDate(SNAPSHOT_DATE)}.
+          документации. Данные на {formatDate(SNAPSHOT_STATS.date)}.
         </p>
         <p className="row-tight small text-secondary">
           <DemoTag /> проходные баллы в прототипе — тестовые: открытого источника по ним не

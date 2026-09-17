@@ -301,3 +301,64 @@ describe('seedSyntheticEvents', () => {
     expect(counts[0]).toBeGreaterThan(100);
   });
 });
+
+describe('воронка вложенная', () => {
+  it('сессия, вошедшая по ссылке «Поделиться», не даёт конверсию больше 100%', async () => {
+    const h = app();
+
+    // Полный путь.
+    await post(h, {
+      sessionId: 'session-full',
+      events: [
+        { name: 'onboarding_start' },
+        { name: 'onboarding_complete' },
+        { name: 'plan_view' },
+      ],
+    });
+
+    // Вход по ссылке: план увидел, онбординг не проходил.
+    await post(h, { sessionId: 'session-shared', events: [{ name: 'plan_view' }] });
+
+    const body = (await (await h.app.request('/api/admin/stats?period=all')).json()) as Record<
+      string,
+      any
+    >;
+
+    expect(body.funnel[1].count).toBe(1);
+    expect(body.funnel[2].count).toBe(1);
+    for (const step of body.funnel) {
+      if (step.conversion === null) continue;
+      expect(step.conversion, step.name).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it('шаг без предыдущего не попадает в воронку', async () => {
+    const h = app();
+    await post(h, {
+      sessionId: 'session-jump',
+      events: [{ name: 'compare_open', props: { codes: 'a|b' } }],
+    });
+
+    const body = (await (await h.app.request('/api/admin/stats?period=all')).json()) as Record<
+      string,
+      any
+    >;
+    expect(body.funnel.find((s: any) => s.name === 'Сравнил направления').count).toBe(0);
+    // Само событие при этом видно в топах — данные не теряются.
+    expect(body.topPairs).toHaveLength(1);
+  });
+
+  it('на синтетике воронка монотонно убывает', async () => {
+    const h = app();
+    seedSyntheticEvents(h.store, 200, 1_000_000_000);
+
+    const body = (await (
+      await h.app.request('/api/admin/stats?period=all&synthetic=1')
+    ).json()) as Record<string, any>;
+
+    const counts = body.funnel.map((s: any) => s.count as number);
+    for (let i = 1; i < counts.length; i += 1) {
+      expect(counts[i]).toBeLessThanOrEqual(counts[i - 1]!);
+    }
+  });
+});

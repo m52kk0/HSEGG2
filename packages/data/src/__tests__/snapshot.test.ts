@@ -194,10 +194,14 @@ describe('проходные баллы', () => {
 });
 
 describe('статистика снимка', () => {
-  it('совпадает с содержимым', () => {
+  it('совпадает с содержимым: первый экран показывает те же числа', () => {
     expect(snapshotStats.directions).toBe(directions.length);
     expect(snapshotStats.universities).toBe(universities.length);
     expect(snapshotStats.regions).toBe(regions.length);
     expect(snapshotStats.programs).toBe(programs.length);
+  });
+
+  it('дата в статистике совпадает с датой снимка', () => {
+    expect(snapshotStats.date).toBe(SNAPSHOT_DATE);
   });
 });
