@@ -46,25 +46,42 @@ export function PlanScreen() {
   if (!plan) return null;
 
   return (
-    <div className="stack-l plan">
-      <VerdictBlock plan={plan} />
-      <WarningsBlock plan={plan} />
+    <div className="plan">
+      {/*
+        Дашборд: слева план, справа — сроки и действия. На мобильном колонки
+        складываются в один поток, порядок тот же, что был.
+      */}
+      <div className="plan-layout">
+        <div className="stack-l plan-main">
+          <VerdictBlock plan={plan} />
+          <WarningsBlock plan={plan} />
 
-      {plan.universities.length === 0 ? (
-        <EmptyPlan />
-      ) : (
-        <ul className="stack">
-          {plan.universities.map((entry) => (
-            <UniversityCard key={entry.university.wikidata} entry={entry} plan={plan} profile={profile} />
-          ))}
-        </ul>
-      )}
+          {plan.universities.length === 0 ? (
+            <EmptyPlan />
+          ) : (
+            <ul className="stack">
+              {plan.universities.map((entry, index) => (
+                <UniversityCard
+                  key={entry.university.wikidata}
+                  entry={entry}
+                  plan={plan}
+                  profile={profile}
+                  defaultOpen={index === 0}
+                />
+              ))}
+            </ul>
+          )}
 
-      <AddUniversityBlock plan={plan} profile={profile} available={available} />
-      <PlanBTeaser verdict={plan.verdict.level} />
-      <NextSteps />
-      <ShareBlock profile={profile} />
-      <ResetBlock />
+          <AddUniversityBlock plan={plan} profile={profile} available={available} />
+        </div>
+
+        <aside className="stack plan-aside">
+          <PlanBTeaser verdict={plan.verdict.level} />
+          <NextSteps />
+          <ShareBlock profile={profile} />
+          <ResetBlock />
+        </aside>
+      </div>
     </div>
   );
 }
@@ -129,18 +146,70 @@ function EmptyPlan() {
 
 /* ------------------------------------------------------------ Карточка вуза */
 
+/**
+ * Полоса зон: приоритеты вуза одним взглядом, без раскрытия карточки.
+ * Цвет — только дополнение: рядом всегда текстовая расшифровка.
+ */
+function ZoneStrip({ programs }: { programs: PlanUniversity['programs'] }) {
+  if (programs.length === 0) return null;
+
+  const counts = { reach: 0, target: 0, safe: 0 };
+  for (const p of programs) counts[p.zone] += 1;
+
+  const summary = [
+    counts.target > 0 ? `${counts.target} ${plural(counts.target, 'цель', 'цели', 'целей')}` : '',
+    counts.reach > 0 ? `${counts.reach} ${plural(counts.reach, 'мечта', 'мечты', 'мечт')}` : '',
+    counts.safe > 0
+      ? `${counts.safe} ${plural(counts.safe, 'запасной', 'запасных', 'запасных')}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <div className="zone-strip">
+      <ol className="zone-strip-dots">
+        {programs.map((p) => (
+          <li
+            key={p.program.id}
+            className={`zone-strip-dot zone-${p.zone}`}
+            title={`Приоритет ${p.priority} · ${ZONE_LABELS[p.zone]} · ${p.program.code}`}
+          >
+            <span className="visually-hidden">
+              Приоритет {p.priority} — {ZONE_LABELS[p.zone]}, {p.program.code}
+            </span>
+            <span aria-hidden="true">{p.priority}</span>
+          </li>
+        ))}
+      </ol>
+      <span className="small text-secondary">{summary}</span>
+    </div>
+  );
+}
+
+function plural(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+}
+
 function UniversityCard({
   entry,
   plan,
   profile,
+  defaultOpen,
 }: {
   entry: PlanUniversity;
   plan: Plan;
   profile: UserProfile;
+  defaultOpen: boolean;
 }) {
   const moveProgram = useStore((s) => s.moveProgram);
   const removeProgram = useStore((s) => s.removeProgram);
   const removeUniversity = useStore((s) => s.removeUniversity);
+  const [open, setOpen] = useState(defaultOpen);
   const [adding, setAdding] = useState(false);
   const [simOpen, setSimOpen] = useState(false);
 
@@ -148,13 +217,17 @@ function UniversityCard({
   const simulation = plan.simulation.find((s) => s.universityId === universityId);
   const inPlanIds = entry.programs.map((p) => p.program.id);
   const canAddMore = entry.programs.length < LIMITS.maxProgramsPerUniversity;
+  const listId = `programs-${universityId}`;
 
   return (
     <Card as="li">
       <div className="stack">
         <header className="stack-s">
           <h2>{entry.university.name}</h2>
-          <p className="small text-secondary">{entry.university.city}</p>
+          <p className="small text-secondary">
+            {entry.university.city} · {entry.programs.length}{' '}
+            {plural(entry.programs.length, 'направление', 'направления', 'направлений')}
+          </p>
           {entry.likelyAdmission ? (
             <p className="small">
               <span className="text-secondary">Скорее всего зачислят на: </span>
@@ -165,26 +238,49 @@ function UniversityCard({
               Запасного варианта в этом вузе нет — зачисление не гарантировано.
             </p>
           )}
+          <ZoneStrip programs={entry.programs} />
+          <button
+            type="button"
+            className="disclosure no-print"
+            aria-expanded={open}
+            aria-controls={listId}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className={open ? 'chevron chevron-open' : 'chevron'}
+            />
+            {open ? 'Свернуть направления' : 'Показать направления и приоритеты'}
+          </button>
         </header>
 
+        <div id={listId} className={open ? 'card-body' : 'card-body card-body-collapsed'}>
         <ol className="program-list">
           {entry.programs.map((item, index) => (
             <li key={item.program.id} className="program-row">
-              <div className="program-priority">
-                <span className="program-priority-num">{item.priority}</span>
-                <span className="program-priority-label">
-                  {item.priority === 1 ? 'Хочу больше всего' : `Приоритет ${item.priority}`}
-                </span>
-              </div>
+              <span
+                className="program-priority-num"
+                title={
+                  item.priority === 1
+                    ? 'Приоритет 1 — самое желанное. Зачислят на него, если проходишь.'
+                    : `Приоритет ${item.priority}`
+                }
+              >
+                {item.priority}
+              </span>
 
               <div className="program-main">
                 <Link to={`/program/${item.program.id}`} className="program-name">
                   <span className="code">{item.program.code}</span> · {item.program.name}
                 </Link>
-                <div className="row-tight small">
+                <div className="program-meta small">
+                  <span className="program-priority-label">
+                    {item.priority === 1 ? 'Хочу больше всего' : `Приоритет ${item.priority}`}
+                  </span>
                   <ZoneBadge zone={item.zone} margin={item.margin} />
-                  <span className="text-secondary">
-                    {pointsWord(item.margin)} к прогнозу проходного
+                  <span className="text-secondary program-margin-note">
+                    {pointsWord(item.margin)} к прогнозу
                   </span>
                   {item.program.isDemo ? <DemoTag /> : null}
                 </div>
@@ -283,6 +379,7 @@ function UniversityCard({
             ) : null}
           </div>
         ) : null}
+        </div>
       </div>
     </Card>
   );

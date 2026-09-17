@@ -1,5 +1,124 @@
 .plan {
+  width: 100%;
+}
+
+/*
+ * Дашборд: основная колонка с планом и боковая с действиями и сроками.
+ * Раньше всё это лежало одним столбцом — страница выходила вдвое длиннее,
+ * а справа оставалось пустое место.
+ */
+.plan-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--space) * 4);
+  align-items: start;
+}
+
+@media (width >= 960px) {
+  .plan-layout {
+    grid-template-columns: minmax(0, 1fr) 312px;
+    gap: calc(var(--space) * 5);
+  }
+
+  .plan-aside {
+    position: sticky;
+    /* Шапка 56px + отступ экрана. */
+    top: calc(56px + var(--space) * 3);
+  }
+}
+
+.plan-main {
+  min-width: 0;
+  /* Текст читается до ~70 символов в строке; шире делать нечего. */
   max-width: 760px;
+}
+
+.plan-aside {
+  min-width: 0;
+  padding-top: calc(var(--space) * 2);
+  border-top: 1px solid var(--border);
+}
+
+@media (width >= 960px) {
+  .plan-aside {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+/* ---------- Сворачивание карточки вуза ---------- */
+.disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space);
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: var(--small-size);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.disclosure:hover {
+  color: var(--accent-hover);
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2);
+}
+
+.card-body-collapsed {
+  display: none;
+}
+
+/* ---------- Полоса зон: приоритеты одним взглядом ---------- */
+.zone-strip {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 1.5);
+  flex-wrap: wrap;
+}
+
+.zone-strip-dots {
+  display: flex;
+  gap: calc(var(--space) * 0.5);
+}
+
+/*
+ * Номер приоритета читается тёмным на светлой заливке зоны: белый текст
+ * на зелёном и оранжевом не проходит контраст AA для мелкого шрифта.
+ */
+.zone-strip-dot {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid;
+  border-radius: var(--radius-s);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.zone-strip-dot.zone-safe {
+  background: var(--zone-safe-light);
+  border-color: var(--zone-safe);
+}
+
+.zone-strip-dot.zone-target {
+  background: var(--zone-target-light);
+  border-color: var(--zone-target);
+}
+
+.zone-strip-dot.zone-reach {
+  background: var(--zone-reach-light);
+  border-color: var(--zone-reach);
 }
 
 .verdict-dot {
@@ -28,14 +147,19 @@
   flex-direction: column;
 }
 
+/*
+ * Компактная строка: номер приоритета и название в одной линии, зона и
+ * кнопки — во второй. На мобильном кнопки уезжают в свой ряд, иначе
+ * на 375px названию оставалось бы 150px и оно ползло на пять строк.
+ */
 .program-row {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 28px minmax(0, 1fr);
   grid-template-areas:
-    'priority'
-    'main'
-    'actions';
-  gap: var(--space);
+    'num name'
+    '. meta'
+    'actions actions';
+  gap: calc(var(--space) * 0.75) var(--space);
   padding: calc(var(--space) * 1.5) 0;
   border-top: 1px solid var(--border);
   animation: row-in var(--motion) var(--ease);
@@ -45,11 +169,13 @@
   border-top: 0;
 }
 
-@media (width >= 560px) {
+@media (width >= 620px) {
   .program-row {
-    grid-template-columns: 148px 1fr auto;
-    grid-template-areas: 'priority main actions';
-    align-items: center;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    grid-template-areas:
+      'num name actions'
+      '. meta actions';
+    align-items: start;
   }
 }
 
@@ -69,14 +195,8 @@
   }
 }
 
-.program-priority {
-  grid-area: priority;
-  display: flex;
-  align-items: center;
-  gap: var(--space);
-}
-
 .program-priority-num {
+  grid-area: num;
   display: grid;
   place-items: center;
   width: 28px;
@@ -86,18 +206,11 @@
   font-weight: 600;
   font-size: var(--small-size);
   flex: none;
-}
-
-.program-priority-label {
-  font-size: var(--small-size);
-  color: var(--text-secondary);
+  cursor: help;
 }
 
 .program-main {
-  grid-area: main;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 0.5);
+  grid-area: name;
   min-width: 0;
 }
 
@@ -109,6 +222,29 @@
 .program-name:hover {
   color: var(--accent);
   text-decoration: none;
+}
+
+.program-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space);
+  margin-top: calc(var(--space) * 0.5);
+}
+
+.program-priority-label {
+  color: var(--text-secondary);
+}
+
+/* Пояснение к запасу — только там, где хватает ширины. */
+.program-margin-note {
+  display: none;
+}
+
+@media (width >= 760px) {
+  .program-margin-note {
+    display: inline;
+  }
 }
 
 .program-actions {
@@ -198,13 +334,7 @@
   gap: calc(var(--space) * 0.5);
   padding: var(--space) 0;
   border-top: 1px solid var(--border);
-}
-
-@media (width >= 560px) {
-  .step-row {
-    grid-template-columns: 160px 1fr;
-    gap: calc(var(--space) * 2);
-  }
+  font-size: var(--small-size);
 }
 
 .step-row:first-child {
