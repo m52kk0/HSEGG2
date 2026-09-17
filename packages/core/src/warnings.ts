@@ -2,10 +2,19 @@ import type { PlanUniversity, PlanWarning } from './types';
 import { LIMITS } from './config/campaign';
 import { universitiesWord } from './verdict';
 
+function regionsWord(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'региона';
+  return 'регионов';
+}
+
 export interface WarningsInput {
   universities: PlanUniversity[];
   /** Сколько вузов вообще доступно под профиль — чтобы не предлагать несуществующее. */
   availableUniversities: number;
+  /** Свой регион: вузы из него не требуют переезда. */
+  homeRegion?: string | null;
 }
 
 /**
@@ -15,6 +24,7 @@ export interface WarningsInput {
 export function buildWarnings({
   universities,
   availableUniversities,
+  homeRegion = null,
 }: WarningsInput): PlanWarning[] {
   const warnings: PlanWarning[] = [];
   if (universities.length === 0) return warnings;
@@ -49,6 +59,28 @@ export function buildWarnings({
       id: 'few_universities',
       text: `Можно подать ещё в ${room} ${universitiesWord(room)} — это бесплатно увеличивает шансы.`,
       actionLabel: 'Добавить вуз',
+    });
+  }
+
+  // План из нескольких регионов — это переезд. Стоимость сервис не считает,
+  // но промолчать о ней нельзя: это самый частый сюрприз после зачисления.
+  const regions = new Set(universities.map((u) => u.university.region));
+  const away = [...regions].filter((r) => r !== homeRegion);
+  if (regions.size > 1 && away.length > 0) {
+    const awaySafe = universities.some(
+      (u) => u.university.region !== homeRegion && u.programs.some((p) => p.zone === 'safe'),
+    );
+    const homeSafe = universities.some(
+      (u) => u.university.region === homeRegion && u.programs.some((p) => p.zone === 'safe'),
+    );
+
+    warnings.push({
+      id: 'several_regions',
+      text:
+        `В плане вузы из ${regions.size} ${regionsWord(regions.size)}: ${[...regions].join(', ')}. ` +
+        (awaySafe && !homeSafe
+          ? 'Запасной вариант — только в другом регионе, значит понадобится общежитие и дорога.'
+          : 'Считай общежитие и дорогу отдельно — сервис их не учитывает.'),
     });
   }
 

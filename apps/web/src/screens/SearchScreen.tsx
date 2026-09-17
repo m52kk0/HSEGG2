@@ -32,14 +32,26 @@ export function SearchScreen() {
   const [onlyFit, setOnlyFit] = useState(true);
   const [onlySafe, setOnlySafe] = useState(params.get('safe') === '1');
   const [inMyRegions, setInMyRegions] = useState(true);
+  /** null — все мои регионы; иначе поиск сужен до одного. */
+  const [oneRegion, setOneRegion] = useState<string | null>(null);
+
+  const myRegions = useMemo(() => {
+    const set = profile ? targetRegions(profile) : null;
+    return set ? [...set] : [];
+  }, [profile]);
 
   const rows = useMemo(
-    () => buildRows(query, profile, { onlyFit, onlySafe, inMyRegions }),
-    [query, profile, onlyFit, onlySafe, inMyRegions],
+    () => buildRows(query, profile, { onlyFit, onlySafe, inMyRegions, oneRegion }),
+    [query, profile, onlyFit, onlySafe, inMyRegions, oneRegion],
   );
 
-  const regionsFilter = profile ? targetRegions(profile) : null;
-  const regionLabel = regionsFilter ? [...regionsFilter].join(', ') : 'вся Россия';
+  const regionLabel = !inMyRegions
+    ? 'вся Россия'
+    : oneRegion
+      ? oneRegion
+      : myRegions.length > 0
+        ? myRegions.join(', ')
+        : 'вся Россия';
 
   return (
     <div className="stack-l search-page">
@@ -58,13 +70,40 @@ export function SearchScreen() {
           <Chip active={onlySafe} onClick={() => setOnlySafe((v) => !v)}>
             Только с запасом
           </Chip>
-          <Chip active={inMyRegions} onClick={() => setInMyRegions((v) => !v)}>
-            {regionsFilter ? 'Мои регионы' : 'Вся Россия'}
-          </Chip>
+          {myRegions.length > 0 ? (
+            <Chip
+              active={inMyRegions}
+              onClick={() => {
+                setInMyRegions((v) => !v);
+                setOneRegion(null);
+              }}
+            >
+              {myRegions.length > 1 ? 'Мои регионы' : myRegions[0]}
+            </Chip>
+          ) : null}
         </div>
+
+        {/* Выбрано несколько регионов — даём сузить поиск до одного. */}
+        {inMyRegions && myRegions.length > 1 ? (
+          <div className="row no-print">
+            <Chip active={oneRegion === null} onClick={() => setOneRegion(null)}>
+              Все мои
+            </Chip>
+            {myRegions.map((region) => (
+              <Chip
+                key={region}
+                active={oneRegion === region}
+                onClick={() => setOneRegion(oneRegion === region ? null : region)}
+              >
+                {region}
+              </Chip>
+            ))}
+          </div>
+        ) : null}
+
         <p className="small text-secondary">
           Искать можно и по коду, и по названию: «15.03.04» или «автоматизация». Регион поиска:{' '}
-          {inMyRegions ? regionLabel : 'вся Россия'}.
+          {regionLabel}.
         </p>
       </div>
 
@@ -155,12 +194,23 @@ function vuzWord(n: number): string {
 function buildRows(
   query: string,
   profile: UserProfile | null,
-  filters: { onlyFit: boolean; onlySafe: boolean; inMyRegions: boolean },
+  filters: {
+    onlyFit: boolean;
+    onlySafe: boolean;
+    inMyRegions: boolean;
+    oneRegion: string | null;
+  },
 ): ResultRow[] {
   const trimmed = query.trim();
   if (trimmed.length === 0) return [];
 
-  const regions = profile && filters.inMyRegions ? targetRegions(profile) : null;
+  const regions = !filters.inMyRegions
+    ? null
+    : filters.oneRegion
+      ? new Set([filters.oneRegion])
+      : profile
+        ? targetRegions(profile)
+        : null;
 
   return searchDirections(trimmed, 25)
     .map<ResultRow>((direction) => {

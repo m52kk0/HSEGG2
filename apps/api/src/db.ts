@@ -2,9 +2,18 @@
  * Хранилище на встроенном node:sqlite — без нативных сборок и отдельной БД-службы.
  * Две таблицы: обезличенные события аналитики и кэш ответов «Работы России».
  */
-import { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync as DatabaseSyncCtor } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+
+/**
+ * node:sqlite берём через process.getBuiltinModule: сборщики (Vite в тестах,
+ * esbuild в прод-сборке) не знают об этом модуле и пытаются искать пакет
+ * «sqlite» в node_modules. Так импорт остаётся полностью рантаймовым.
+ */
+const { DatabaseSync } = process.getBuiltinModule('node:sqlite') as {
+  DatabaseSync: typeof DatabaseSyncCtor;
+};
 
 export interface EventRow {
   sessionId: string;

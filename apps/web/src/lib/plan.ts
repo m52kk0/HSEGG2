@@ -69,7 +69,7 @@ export function planFromLayout(
     planUniversities.push({ university, programs: items, likelyAdmission: null });
   }
 
-  return recomputePlan(planUniversities, availableUniversities);
+  return recomputePlan(planUniversities, availableUniversities, profile.homeRegion);
 }
 
 export interface AddableProgram {
@@ -106,6 +106,7 @@ export interface AddableUniversity {
   id: string;
   name: string;
   city: string;
+  region: string;
   programsCount: number;
   bestZone: Zone;
   bestMargin: number;
@@ -127,6 +128,7 @@ export function addableUniversities(
         id: c.university.wikidata,
         name: c.university.name,
         city: c.university.city,
+        region: c.university.region,
         programsCount: c.programs.length,
         bestZone: best.zone,
         bestMargin: best.margin,

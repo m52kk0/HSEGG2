@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import {
   EXAM_SUBJECTS,
   INTEREST_GROUPS,
@@ -30,12 +30,51 @@ import './onboarding.css';
 
 const TOTAL_STEPS = 4;
 
-/** Достижения. Сумма ограничена 10 баллами — каждый вуз считает по-своему. */
+function plural(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+}
+
+/**
+ * Индивидуальные достижения. Список — те основания, которые вузы реально
+ * засчитывают в 2026 году; суммарно по правилам приёма не больше 10 баллов.
+ * Итоговое сочинение раньше встречалось в перечнях, но сейчас почти никто
+ * за него баллы не даёт, поэтому его тут нет.
+ */
 const ACHIEVEMENTS = [
-  { id: 'medal', label: 'Золотая медаль или аттестат с отличием', points: 5 },
-  { id: 'gto', label: 'Знак ГТО', points: 2 },
-  { id: 'volunteer', label: 'Волонтёрство', points: 2 },
-  { id: 'essay', label: 'Итоговое сочинение с отличием', points: 2 },
+  {
+    id: 'medal',
+    label: 'Золотая медаль или аттестат с отличием',
+    points: 5,
+    note: 'самое весомое достижение: обычно 4–6 баллов',
+  },
+  {
+    id: 'olympiad',
+    label: 'Призёр олимпиады или конкурса',
+    points: 3,
+    note: 'не тех, что дают поступление без экзаменов, а перечневых и вузовских',
+  },
+  {
+    id: 'gto',
+    label: 'Знак ГТО',
+    points: 2,
+    note: 'нужен действующий знак отличия',
+  },
+  {
+    id: 'sport',
+    label: 'Спортивный разряд от КМС',
+    points: 2,
+    note: 'кандидат в мастера спорта и выше',
+  },
+  {
+    id: 'volunteer',
+    label: 'Волонтёрство',
+    points: 1,
+    note: 'обычно нужна книжка волонтёра и стаж от года',
+  },
 ] as const;
 
 type AchievementId = (typeof ACHIEVEMENTS)[number]['id'];
@@ -265,16 +304,20 @@ function StepScores({
 
       <div className="stack">
         <div className="row-tight">
-          <h2>Индивидуальные достижения</h2>
-          <Tooltip text="Каждый вуз засчитывает достижения по-своему, но суммарно они дают не больше 10 баллов. Мы считаем по максимуму." />
+          <h2>Что даст дополнительные баллы</h2>
+          <Tooltip text="Индивидуальные достижения. Каждый вуз сам решает, что и сколько засчитывать, но суммарно по правилам приёма — не больше 10 баллов." />
         </div>
+        <p className="small text-secondary">
+          Отметь то, что у тебя есть. Значения — типичные: точные цифры смотри в перечне
+          достижений своего вуза.
+        </p>
         <Card variant="flat">
           <div className="stack-s">
             {ACHIEVEMENTS.map((a) => (
               <Checkbox
                 key={a.id}
                 label={a.label}
-                note={`до +${a.points} баллов`}
+                note={`обычно +${a.points} · ${a.note}`}
                 checked={draft.achievements.includes(a.id)}
                 onChange={(checked) =>
                   setDraft((d) => ({
@@ -286,8 +329,27 @@ function StepScores({
                 }
               />
             ))}
+
+            <div className="bonus-total">
+              <span>
+                Учтём <strong>+{bonus}</strong> к сумме ЕГЭ
+              </span>
+              {bonus >= LIMITS.maxAchievementsBonus ? (
+                <span className="small text-secondary">
+                  достигнут максимум {LIMITS.maxAchievementsBonus} баллов — больше правила приёма
+                  не разрешают
+                </span>
+              ) : (
+                <span className="small text-secondary">
+                  максимум {LIMITS.maxAchievementsBonus} баллов
+                </span>
+              )}
+            </div>
+
             <p className="small text-secondary">
-              Учтём <strong>+{bonus}</strong> к сумме ЕГЭ — максимум 10 баллов по правилам приёма.
+              Чего в списке нет и почему: за итоговое сочинение баллы сейчас почти нигде не
+              начисляют, а олимпиады уровня «поступление без экзаменов» работают иначе — они не
+              добавляют баллы, а дают место вне конкурса. Такие льготы в прототипе не считаются.
             </p>
           </div>
         </Card>
@@ -377,24 +439,37 @@ function StepRegions({ draft, setDraft }: StepProps) {
 
           {draft.regionMode === 'several' ? (
             <div className="stack-s">
-              <p className="field-label">Куда ещё готов поехать</p>
-              <div className="row">
-                {regions.slice(0, 0).map(() => null)}
-                {draft.extraRegions.map((name) => (
-                  <Chip
-                    key={name}
-                    active
-                    onClick={() =>
-                      setDraft((d) => ({
-                        ...d,
-                        extraRegions: d.extraRegions.filter((r) => r !== name),
-                      }))
-                    }
-                  >
-                    {name} ✕
-                  </Chip>
-                ))}
-              </div>
+              <p className="field-label">
+                Куда ещё готов поехать{' '}
+                {draft.extraRegions.length > 0 ? `(${draft.extraRegions.length})` : ''}
+              </p>
+
+              {draft.extraRegions.length > 0 ? (
+                <div className="region-chips">
+                  {draft.extraRegions.map((name) => (
+                    <Chip
+                      key={name}
+                      active
+                      onClick={() =>
+                        setDraft((d) => ({
+                          ...d,
+                          extraRegions: d.extraRegions.filter((r) => r !== name),
+                        }))
+                      }
+                    >
+                      {name}
+                      <X size={14} aria-hidden="true" />
+                      <span className="visually-hidden">— убрать регион</span>
+                    </Chip>
+                  ))}
+                </div>
+              ) : (
+                <p className="small text-secondary">
+                  Пока выбран только свой регион. Добавь соседние — в плане появятся вузы оттуда,
+                  и запасных вариантов станет больше.
+                </p>
+              )}
+
               <Combobox
                 label="Добавить регион"
                 options={options.filter(
@@ -405,6 +480,15 @@ function StepRegions({ draft, setDraft }: StepProps) {
                   setDraft((d) => ({ ...d, extraRegions: [...d.extraRegions, value] }))
                 }
               />
+
+              {draft.extraRegions.length > 0 ? (
+                <p className="small text-secondary">
+                  Ищем в {draft.extraRegions.length + 1}{' '}
+                  {plural(draft.extraRegions.length + 1, 'регионе', 'регионах', 'регионах')}. Вузы
+                  из своего региона мы ставим выше: дорога и жильё тоже считаются, хотя денег
+                  сервис не считает.
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>

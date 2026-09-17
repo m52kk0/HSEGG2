@@ -171,14 +171,41 @@ function orderPrograms(items: Scored[], user: UserProfile): Scored[] {
   });
 }
 
-function distanceKm(a: University, b: University): number | null {
-  if (a.lat === null || a.lon === null || b.lat === null || b.lon === null) return null;
+interface Point {
+  lat: number;
+  lon: number;
+}
+
+function distanceKm(a: Point, b: University): number | null {
+  if (b.lat === null || b.lon === null) return null;
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);
   const dLon = toRad(b.lon - a.lon);
   const lat = toRad((a.lat + b.lat) / 2);
   const x = dLon * Math.cos(lat);
   return Math.round(6371 * Math.sqrt(dLat * dLat + x * x));
+}
+
+/**
+ * Точка отсчёта «близости к дому» — центр вузов своего региона.
+ * Один произвольный вуз региона брать нельзя: в большом регионе он может
+ * стоять на краю, и расстояния получатся случайными.
+ */
+function homeCenter(
+  universities: readonly University[],
+  homeRegion: string | null,
+): Point | null {
+  if (!homeRegion) return null;
+  let lat = 0;
+  let lon = 0;
+  let count = 0;
+  for (const u of universities) {
+    if (u.region !== homeRegion || u.lat === null || u.lon === null) continue;
+    lat += u.lat;
+    lon += u.lon;
+    count += 1;
+  }
+  return count === 0 ? null : { lat: lat / count, lon: lon / count };
 }
 
 export interface UniversityCandidate {
@@ -206,9 +233,7 @@ export function collectCandidates({
   const regions = targetRegions(user);
   const prefixes = allowedPrefixes(user.interests);
   const byId = new Map(universities.map((u) => [u.wikidata, u]));
-  const homeUniversity = user.homeRegion
-    ? (universities.find((u) => u.region === user.homeRegion && u.lat !== null) ?? null)
-    : null;
+  const origin = homeCenter(universities, user.homeRegion);
 
   const grouped = new Map<string, Scored[]>();
 
@@ -243,7 +268,7 @@ export function collectCandidates({
       ...items.map((i) => interestRank(i.program.code, user.interests)),
     );
     const isHomeRegion = user.homeRegion !== null && university.region === user.homeRegion;
-    const km = homeUniversity ? distanceKm(homeUniversity, university) : null;
+    const km = origin ? distanceKm(origin, university) : null;
 
     let rating = 0;
     if (hasSafe) rating += 100;
@@ -261,7 +286,9 @@ export function collectCandidates({
       .reduce((best, i) => Math.min(best, Math.abs(i.margin)), Number.POSITIVE_INFINITY);
     if (Number.isFinite(topInterestFit)) rating += Math.max(0, 20 - topInterestFit);
     if (isHomeRegion) rating += 40;
-    if (km !== null) rating += Math.max(0, 20 - km / 100);
+    // Чем дальше от дома, тем дороже дорога и жильё. Сервис денег не считает,
+    // но при равных зонах ближний вуз полезнее дальнего.
+    if (km !== null) rating += Math.max(0, 25 - km / 60);
 
     candidates.push({ university, programs: items, rating, hasSafe, hasTarget, hasReach });
   }
@@ -336,13 +363,18 @@ export function buildPlan(
     warnings: buildWarnings({
       universities: planUniversities,
       availableUniversities: candidates.length,
+      homeRegion: user.homeRegion,
     }),
     simulation: buildSimulation(planUniversities),
   };
 }
 
 /** Пересчёт вердикта, предупреждений и симуляции после ручной правки плана. */
-export function recomputePlan(universities: PlanUniversity[], availableUniversities: number): Plan {
+export function recomputePlan(
+  universities: PlanUniversity[],
+  availableUniversities: number,
+  homeRegion: string | null = null,
+): Plan {
   const renumbered: PlanUniversity[] = universities.map((u) => {
     const programs = u.programs.map((p, index) => ({ ...p, priority: index + 1 }));
     return { university: u.university, programs, likelyAdmission: likelyAdmissionLabel(programs) };
@@ -351,7 +383,7 @@ export function recomputePlan(universities: PlanUniversity[], availableUniversit
   return {
     universities: renumbered,
     verdict: buildVerdict(renumbered),
-    warnings: buildWarnings({ universities: renumbered, availableUniversities }),
+    warnings: buildWarnings({ universities: renumbered, availableUniversities, homeRegion }),
     simulation: buildSimulation(renumbered),
   };
 }

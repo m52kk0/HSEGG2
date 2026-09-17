@@ -126,6 +126,34 @@ export function AdminScreen() {
               Всего сессий за период: {stats.sessions}
               {stats.synthetic > 0 ? ` (из них синтетических: ${stats.synthetic})` : ''}
             </p>
+
+            {stats.actions.length > 0 ? (
+              <Card variant="flat">
+                <div className="stack-s">
+                  <h3>Действия вне воронки</h3>
+                  <p className="small text-secondary">
+                    Правка плана и переход в План Б случаются на любом шаге, поэтому в воронке
+                    их нет: она перестала бы убывать.
+                  </p>
+                  <ul className="stack-s">
+                    {stats.actions.map((action) => (
+                      <li key={action.name} className="top-row">
+                        <span className="small">{action.name}</span>
+                        <span className="top-bar" aria-hidden="true">
+                          <span
+                            className="top-fill"
+                            style={{
+                              width: `${stats.sessions > 0 ? (action.count / stats.sessions) * 100 : 0}%`,
+                            }}
+                          />
+                        </span>
+                        <span className="small text-secondary">{action.count}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Card>
+            ) : null}
           </section>
 
           <div className="admin-grid">

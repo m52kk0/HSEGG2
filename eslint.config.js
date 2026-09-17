@@ -50,4 +50,9 @@ export default tseslint.config(
     files: ['scripts/**/*.ts', 'e2e/**/*.ts', '**/*.config.{ts,js}'],
     rules: { 'no-console': 'off' },
   },
+  {
+    // В тестах разбираем нетипизированный JSON ответов — any здесь уместен.
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
+    rules: { '@typescript-eslint/no-explicit-any': 'off' },
+  },
 );

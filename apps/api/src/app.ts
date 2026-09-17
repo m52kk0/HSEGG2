@@ -261,7 +261,7 @@ export function createApp(deps: AppDeps) {
       return c.json(fail('Слишком много запросов'), 429);
     }
 
-    if (!store) return c.json({ accepted: 0, stored: false }, 202);
+    if (!store) return c.json({ accepted: parsed.data.events.length, stored: false }, 202);
 
     const timestamp = now();
     store.insertEvents(

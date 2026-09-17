@@ -38,3 +38,19 @@
   border-width: 3px;
   color: var(--accent);
 }
+
+/* Итог по достижениям выделяется из списка чекбоксов. */
+.bonus-total {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.25);
+  padding-top: var(--space);
+  border-top: 1px solid var(--border);
+}
+
+/* Выбранные регионы: чипы с крестиком. */
+.region-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+}

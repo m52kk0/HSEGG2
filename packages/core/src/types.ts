@@ -185,7 +185,8 @@ export type WarningId =
   | 'no_safe'
   | 'safe_above_reach'
   | 'few_universities'
-  | 'few_programs';
+  | 'few_programs'
+  | 'several_regions';
 
 export interface PlanWarning {
   id: WarningId;

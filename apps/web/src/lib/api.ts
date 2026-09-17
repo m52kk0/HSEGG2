@@ -40,6 +40,7 @@ export function fetchVacancies(
 
 export interface AdminStats {
   funnel: { name: string; count: number; conversion: number | null }[];
+  actions: { name: string; count: number }[];
   topCodes: { code: string; count: number }[];
   topPairs: { codes: string; count: number }[];
   verdicts: { verdict: string; count: number }[];

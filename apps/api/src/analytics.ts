@@ -6,15 +6,27 @@
 import type { Store } from './db';
 import { EVENT_NAMES } from './schemas';
 
-/** Воронка: шаги в порядке прохождения сценария. */
+/**
+ * Воронка: вложенная последовательность основного сценария. Каждый шаг —
+ * подмножество предыдущего, поэтому конверсии читаются честно.
+ */
 export const FUNNEL: { event: string; label: string }[] = [
   { event: 'onboarding_start', label: 'Открыл онбординг' },
   { event: 'onboarding_complete', label: 'Ответил на 4 вопроса' },
   { event: 'plan_view', label: 'Увидел план' },
   { event: 'program_open', label: 'Открыл направление' },
   { event: 'compare_open', label: 'Сравнил направления' },
-  { event: 'plan_edit', label: 'Поправил план' },
   { event: 'plan_share', label: 'Поделился планом' },
+];
+
+/**
+ * Действия вне воронки: правка плана и переход в План Б случаются
+ * на любом шаге, поэтому в воронку их ставить нельзя — она перестала бы
+ * убывать и конверсии стали бы бессмысленными.
+ */
+export const SIDE_ACTIONS: { event: string; label: string }[] = [
+  { event: 'plan_edit', label: 'Поправил план' },
+  { event: 'planb_open', label: 'Открыл План Б' },
 ];
 
 export interface FunnelStep {
@@ -26,6 +38,7 @@ export interface FunnelStep {
 
 export interface Stats {
   funnel: FunnelStep[];
+  actions: { name: string; count: number }[];
   topCodes: { code: string; count: number }[];
   topPairs: { codes: string; count: number }[];
   verdicts: { verdict: string; count: number }[];
@@ -63,6 +76,10 @@ export function buildStats(
 
   return {
     funnel,
+    actions: SIDE_ACTIONS.map((action) => ({
+      name: action.label,
+      count: sessionsByEvent.get(action.event) ?? 0,
+    })),
     topCodes: store
       .topProps(since, includeSynthetic, 'program_open', 'code', 10)
       .map((r) => ({ code: r.value, count: r.count })),
@@ -129,7 +146,7 @@ export function seedSyntheticEvents(store: Store, sessions = 500, now = Date.now
   for (let i = 0; i < sessions; i += 1) {
     const sessionId = `synthetic-${i}`;
     // Сессии распределены по последним 7 дням.
-    let ts = now - Math.floor(random() * 7 * 24 * 60 * 60 * 1000);
+    let ts = Math.max(0, now - Math.floor(random() * 7 * 24 * 60 * 60 * 1000));
     const push = (name: string, props: Record<string, string | number | boolean> = {}) => {
       ts += 1000 + Math.floor(random() * 60_000);
       rows.push({ sessionId, name, props, createdAt: ts, synthetic: true });
@@ -152,29 +169,29 @@ export function seedSyntheticEvents(store: Store, sessions = 500, now = Date.now
       hasSafe: verdict === 'good' || verdict === 'warning',
     });
 
-    if (random() < 0.62) {
-      const opened = 1 + Math.floor(random() * 3);
-      for (let k = 0; k < opened; k += 1) {
-        push('program_open', { code: pick(CODES), zone: pick(['safe', 'target', 'reach']) });
-      }
-    }
-
-    if (random() < 0.34) {
-      const pair = [pick(CODES), pick(CODES)].sort();
-      push('compare_open', { codes: pair.join('|'), count: 2 });
-    }
-
+    // Правка плана и План Б случаются на любом шаге — они вне воронки.
     if (random() < 0.4) {
       push('plan_edit', {
         action: pick(['move_up', 'move_down', 'remove_program', 'add_program', 'add_university']),
       });
     }
-
     if (verdict === 'danger' || verdict === 'empty' || random() < 0.15) {
       push('planb_open', { verdict });
     }
 
-    if (random() < 0.18) push('plan_share', { method: random() < 0.6 ? 'link' : 'print' });
+    // Дальше — вложенные шаги воронки: сравнение возможно только после
+    // открытия карточки, шаринг — после сравнения.
+    if (random() >= 0.62) continue;
+    const opened = 1 + Math.floor(random() * 3);
+    for (let k = 0; k < opened; k += 1) {
+      push('program_open', { code: pick(CODES), zone: pick(['safe', 'target', 'reach']) });
+    }
+
+    if (random() >= 0.45) continue;
+    const pair = [pick(CODES), pick(CODES)].sort();
+    push('compare_open', { codes: pair.join('|'), count: 2 });
+
+    if (random() < 0.3) push('plan_share', { method: random() < 0.6 ? 'link' : 'print' });
   }
 
   store.insertEvents(rows);

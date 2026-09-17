@@ -351,3 +351,16 @@
   padding-top: calc(var(--space) * 2);
   border-top: 1px solid var(--border);
 }
+
+/* Пометка «другой регион»: переезд — отдельные расходы. */
+.away-tag {
+  display: inline-block;
+  margin-left: var(--space);
+  padding: 0 calc(var(--space) * 0.75);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius-s) / 2);
+  background: var(--bg-secondary);
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: help;
+}

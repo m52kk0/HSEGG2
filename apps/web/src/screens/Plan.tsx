@@ -45,6 +45,8 @@ export function PlanScreen() {
   if (!profile || !layout) return <Navigate to="/" replace />;
   if (!plan) return null;
 
+  const spansRegions = new Set(plan.universities.map((u) => u.university.region)).size > 1;
+
   return (
     <div className="plan">
       {/*
@@ -67,6 +69,7 @@ export function PlanScreen() {
                   plan={plan}
                   profile={profile}
                   defaultOpen={index === 0}
+                  showRegion={spansRegions}
                 />
               ))}
             </ul>
@@ -200,11 +203,14 @@ function UniversityCard({
   plan,
   profile,
   defaultOpen,
+  showRegion,
 }: {
   entry: PlanUniversity;
   plan: Plan;
   profile: UserProfile;
   defaultOpen: boolean;
+  /** В плане вузы из разных регионов — тогда город без региона неоднозначен. */
+  showRegion: boolean;
 }) {
   const moveProgram = useStore((s) => s.moveProgram);
   const removeProgram = useStore((s) => s.removeProgram);
@@ -225,8 +231,17 @@ function UniversityCard({
         <header className="stack-s">
           <h2>{entry.university.name}</h2>
           <p className="small text-secondary">
-            {entry.university.city} · {entry.programs.length}{' '}
+            {entry.university.city}
+            {showRegion && entry.university.city !== entry.university.region
+              ? `, ${entry.university.region}`
+              : ''}{' '}
+            · {entry.programs.length}{' '}
             {plural(entry.programs.length, 'направление', 'направления', 'направлений')}
+            {showRegion && entry.university.region !== profile.homeRegion ? (
+              <span className="away-tag" title="Вуз в другом регионе: понадобится общежитие и дорога">
+                другой регион
+              </span>
+            ) : null}
           </p>
           {entry.likelyAdmission ? (
             <p className="small">
@@ -490,7 +505,10 @@ function AddUniversityBlock({
                 <div className="stack-s add-row-main">
                   <span className="small">{option.name}</span>
                   <div className="row-tight small text-secondary">
-                    <span>{option.city}</span>
+                    <span>
+                      {option.city}
+                      {option.region !== profile.homeRegion ? `, ${option.region}` : ''}
+                    </span>
                     <span>·</span>
                     <span>{option.programsCount} подходящих направлений</span>
                     <ZoneBadge zone={option.bestZone} margin={option.bestMargin} />

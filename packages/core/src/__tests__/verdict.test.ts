@@ -237,3 +237,53 @@ describe('likelyAdmissionLabel', () => {
     expect(onlyReach.likelyAdmission).toBeNull();
   });
 });
+
+describe('предупреждение о нескольких регионах', () => {
+  const home = 'Нижегородская область';
+
+  function inRegion(id: string, region: string, zone: Zone, margin: number): PlanUniversity {
+    const u = planUniversity(id, [{ zone, margin }]);
+    return { ...u, university: { ...u.university, region } };
+  }
+
+  it('план в одном регионе предупреждения не даёт', () => {
+    const warnings = buildWarnings({
+      universities: [inRegion('A', home, 'safe', 15), inRegion('B', home, 'safe', 12)],
+      availableUniversities: 2,
+      homeRegion: home,
+    });
+    expect(warnings.map((w) => w.id)).not.toContain('several_regions');
+  });
+
+  it('план из двух регионов называет их и напоминает о расходах', () => {
+    const warnings = buildWarnings({
+      universities: [inRegion('A', home, 'safe', 15), inRegion('B', 'Москва', 'safe', 12)],
+      availableUniversities: 2,
+      homeRegion: home,
+    });
+    const warning = warnings.find((w) => w.id === 'several_regions');
+    expect(warning).toBeDefined();
+    expect(warning!.text).toContain('2 регионов');
+    expect(warning!.text).toContain('Москва');
+    expect(warning!.text).toContain('общежитие');
+  });
+
+  it('если подушка только в чужом регионе — говорит об этом прямо', () => {
+    const warnings = buildWarnings({
+      universities: [inRegion('A', home, 'reach', -20), inRegion('B', 'Москва', 'safe', 12)],
+      availableUniversities: 2,
+      homeRegion: home,
+    });
+    const warning = warnings.find((w) => w.id === 'several_regions')!;
+    expect(warning.text).toContain('Запасной вариант — только в другом регионе');
+  });
+
+  it('без указанного домашнего региона всё равно предупреждает о переезде', () => {
+    const warnings = buildWarnings({
+      universities: [inRegion('A', 'Москва', 'safe', 15), inRegion('B', 'Омская область', 'safe', 12)],
+      availableUniversities: 2,
+      homeRegion: null,
+    });
+    expect(warnings.map((w) => w.id)).toContain('several_regions');
+  });
+});

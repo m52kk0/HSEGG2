@@ -370,3 +370,61 @@ describe('recomputePlan', () => {
     expect(recomputePlan(withoutSafe, 1).verdict.level).toBe('danger');
   });
 });
+
+describe('несколько регионов', () => {
+  const home = 'Нижегородская область';
+
+  it('вузы своего региона стоят выше вузов соседних при равных зонах', () => {
+    const local = withPrograms('LOCAL', [{ margin: 0, code: '15.03.04' }], {
+      region: home,
+      lat: 56.3,
+      lon: 44.0,
+    });
+    const far = withPrograms('FAR', [{ margin: 0, code: '15.03.04' }], {
+      region: 'Республика Татарстан',
+      lat: 55.8,
+      lon: 49.1,
+    });
+
+    const plan = buildPlan(
+      user({ regionMode: 'several', regions: ['Республика Татарстан'] }),
+      [...local.programs, ...far.programs],
+      [local.university, far.university],
+    );
+
+    expect(plan.universities.map((u) => u.university.wikidata)).toEqual(['LOCAL', 'FAR']);
+  });
+
+  it('берёт вузы всех выбранных регионов и отбрасывает невыбранные', () => {
+    const a = withPrograms('A', [{ margin: 5, code: '15.03.04' }], { region: home });
+    const b = withPrograms('B', [{ margin: 5, code: '15.03.04' }], { region: 'Москва' });
+    const c = withPrograms('C', [{ margin: 5, code: '15.03.04' }], { region: 'Омская область' });
+
+    const plan = buildPlan(
+      user({ regionMode: 'several', regions: ['Москва'] }),
+      [...a.programs, ...b.programs, ...c.programs],
+      [a.university, b.university, c.university],
+    );
+
+    const ids = plan.universities.map((u) => u.university.wikidata);
+    expect(ids).toEqual(expect.arrayContaining(['A', 'B']));
+    expect(ids).not.toContain('C');
+  });
+
+  it('«где угодно» игнорирует регионы профиля', () => {
+    const far = withPrograms('FAR', [{ margin: 5, code: '15.03.04' }], {
+      region: 'Камчатский край',
+    });
+    const plan = buildPlan(user({ regionMode: 'any' }), far.programs, [far.university]);
+    expect(plan.universities).toHaveLength(1);
+  });
+
+  it('вуз без координат не ломает расчёт близости', () => {
+    const noCoords = withPrograms('NC', [{ margin: 5, code: '15.03.04' }], {
+      region: home,
+      lat: null,
+      lon: null,
+    });
+    expect(() => buildPlan(user(), noCoords.programs, [noCoords.university])).not.toThrow();
+  });
+});
